@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Medios</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión de Medios</h1>
+        
+        <div id="titles">
+            <h2>Títulos</h2>
+            <ul id="title-list"></ul>
+            <input type="text" id="new-title" placeholder="Nuevo título">
+            <button id="add-title-btn">Agregar Título</button>
+        </div>
+        
+        <div id="videos">
+            <h2>Videos</h2>
+            <ul id="video-list"></ul>
+            <input type="file" id="new-video" accept="video/*">
+            <button id="add-video-btn">Agregar Video</button>
+        </div>
+        
+        <div id="images">
+            <h2>Imágenes</h2>
+            <ul id="image-list"></ul>
+            <input type="file" id="new-image" accept="image/*">
+            <button id="add-image-btn">Agregar Imagen</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
