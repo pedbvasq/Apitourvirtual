@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const session = require('express-session');
 const app = express();
 const port = 3000;
 
@@ -23,6 +24,24 @@ const upload = multer({ storage: storage });
 
 // Middleware para parsear JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware para sesiones
+app.use(session({
+    secret: 'mi-secreto',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
+
+// Middleware para verificar autenticación
+function checkAuth(req, res, next) {
+    if (req.session && req.session.user) {
+        return next();
+    } else {
+        res.redirect('/login');
+    }
+}
 
 // Configuración para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,11 +55,11 @@ let titles = {
 };
 
 // Rutas CRUD para títulos
-app.get('/api/titles', (req, res) => {
+app.get('/api/titles', checkAuth, (req, res) => {
     res.json(titles);
 });
 
-app.get('/api/titles/:id', (req, res) => {
+app.get('/api/titles/:id', checkAuth, (req, res) => {
     const id = req.params.id;
     const title = titles[id];
     if (title) {
@@ -50,14 +69,14 @@ app.get('/api/titles/:id', (req, res) => {
     }
 });
 
-app.post('/api/titles', (req, res) => {
+app.post('/api/titles', checkAuth, (req, res) => {
     const newId = Object.keys(titles).length + 1;
     const newTitle = req.body.title;
     titles[newId] = newTitle;
     res.json({ id: newId, title: newTitle });
 });
 
-app.put('/api/titles/:id', (req, res) => {
+app.put('/api/titles/:id', checkAuth, (req, res) => {
     const id = req.params.id;
     const newTitle = req.body.title;
     if (titles[id]) {
@@ -68,7 +87,7 @@ app.put('/api/titles/:id', (req, res) => {
     }
 });
 
-app.delete('/api/titles/:id', (req, res) => {
+app.delete('/api/titles/:id', checkAuth, (req, res) => {
     const id = req.params.id;
     if (titles[id]) {
         delete titles[id];
@@ -79,7 +98,7 @@ app.delete('/api/titles/:id', (req, res) => {
 });
 
 // Rutas CRUD para videos
-app.get('/api/videos', (req, res) => {
+app.get('/api/videos', checkAuth, (req, res) => {
     fs.readdir('videos', (err, files) => {
         if (err) {
             res.status(500).json({ error: 'Error al leer el directorio de videos' });
@@ -89,11 +108,11 @@ app.get('/api/videos', (req, res) => {
     });
 });
 
-app.post('/api/videos', upload.single('video'), (req, res) => {
+app.post('/api/videos', checkAuth, upload.single('video'), (req, res) => {
     res.json({ filename: req.file.filename });
 });
 
-app.delete('/api/videos/:filename', (req, res) => {
+app.delete('/api/videos/:filename', checkAuth, (req, res) => {
     const filename = req.params.filename;
     fs.unlink(path.join(__dirname, 'videos', filename), (err) => {
         if (err) {
@@ -105,7 +124,7 @@ app.delete('/api/videos/:filename', (req, res) => {
 });
 
 // Rutas CRUD para imágenes
-app.get('/api/images', (req, res) => {
+app.get('/api/images', checkAuth, (req, res) => {
     fs.readdir('images', (err, files) => {
         if (err) {
             res.status(500).json({ error: 'Error al leer el directorio de imágenes' });
@@ -115,11 +134,11 @@ app.get('/api/images', (req, res) => {
     });
 });
 
-app.post('/api/images', upload.single('image'), (req, res) => {
+app.post('/api/images', checkAuth, upload.single('image'), (req, res) => {
     res.json({ filename: req.file.filename });
 });
 
-app.delete('/api/images/:filename', (req, res) => {
+app.delete('/api/images/:filename', checkAuth, (req, res) => {
     const filename = req.params.filename;
     fs.unlink(path.join(__dirname, 'images', filename), (err) => {
         if (err) {
@@ -131,8 +150,38 @@ app.delete('/api/images/:filename', (req, res) => {
 });
 
 // Ruta para la raíz
-app.get('/', (req, res) => {
+app.get('/', checkAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ruta para login
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    // Validar usuario
+    fs.readFile('users.json', 'utf8', (err, data) => {
+        if (err) {
+            res.status(500).json({ error: 'Error al leer los datos de usuario' });
+        } else {
+            let users;
+            try {
+                users = JSON.parse(data);
+            } catch (parseError) {
+                return res.status(500).json({ error: 'Error al parsear los datos de usuario' });
+            }
+
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                req.session.user = user;
+                res.redirect('/');
+            } else {
+                res.redirect('/login?error=Usuario o contraseña incorrectos');
+            }
+        }
+    });
 });
 
 app.listen(port, () => {
