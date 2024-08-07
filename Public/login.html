@@ -13,6 +13,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            position: relative;
         }
         .login-container {
             background-color: #fff;
@@ -44,6 +45,21 @@
         .login-container button:hover {
             background-color: #0056b3;
         }
+        .popup {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 10px;
+            width: 90%;
+            max-width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -54,7 +70,19 @@
             <input type="password" name="password" placeholder="Contraseña" required>
             <button type="submit">Ingresar</button>
         </form>
-        <p id="error-message"></p>
     </div>
+    <div id="popup" class="popup">Usuario o contraseña incorrectos</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('error')) {
+                const popup = document.getElementById('popup');
+                popup.style.display = 'block';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 3000); // Oculta el popup después de 3 segundos
+            }
+        });
+    </script>
 </body>
 </html>

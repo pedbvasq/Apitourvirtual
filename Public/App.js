@@ -142,3 +142,20 @@ function deleteImage(filename) {
             loadImages();
         });
 }
+document.getElementById('logout-btn').addEventListener('click', function() {
+    fetch('/logout', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '/login';
+        } else {
+            alert('Error al cerrar sesión');
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('Error al cerrar sesión');
+    });
+});

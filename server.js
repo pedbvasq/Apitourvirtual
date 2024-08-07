@@ -5,6 +5,10 @@ const multer = require('multer');
 const session = require('express-session');
 const app = express();
 const port = 3000;
+// Ruta para la raíz
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
 
 // Configuración del almacenamiento de archivos
 const storage = multer.diskStorage({
@@ -47,6 +51,58 @@ function checkAuth(req, res, next) {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/videos', express.static(path.join(__dirname, 'videos')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Ruta para login
+app.get('/login', (req, res) => {
+    if (req.session && req.session.user) {
+        res.redirect('/administrador');
+    } else {
+        const error = req.query.error ? req.query.error : '';
+        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    }
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    // Validar usuario
+    fs.readFile('users.json', 'utf8', (err, data) => {
+        if (err) {
+            res.status(500).json({ error: 'Error al leer los datos de usuario' });
+        } else {
+            let users;
+            try {
+                users = JSON.parse(data);
+            } catch (parseError) {
+                return res.status(500).json({ error: 'Error al parsear los datos de usuario' });
+            }
+
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                req.session.user = user;
+                res.redirect('/administrador');
+            } else {
+                res.redirect('/login?error=Usuario o contraseña incorrectos');
+            }
+        }
+    });
+});
+
+// Ruta para cerrar sesión
+app.get('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            res.status(500).json({ error: 'Error al cerrar sesión' });
+        } else {
+            res.redirect('/login');
+        }
+    });
+});
+
+
+// Ruta para administrador
+app.get('/administrador', checkAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Datos de ejemplo para títulos
 let titles = {
@@ -145,41 +201,6 @@ app.delete('/api/images/:filename', checkAuth, (req, res) => {
             res.status(500).json({ error: 'Error al eliminar la imagen' });
         } else {
             res.json({ filename });
-        }
-    });
-});
-
-// Ruta para la raíz
-app.get('/', checkAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Ruta para login
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    // Validar usuario
-    fs.readFile('users.json', 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).json({ error: 'Error al leer los datos de usuario' });
-        } else {
-            let users;
-            try {
-                users = JSON.parse(data);
-            } catch (parseError) {
-                return res.status(500).json({ error: 'Error al parsear los datos de usuario' });
-            }
-
-            const user = users.find(u => u.username === username && u.password === password);
-            if (user) {
-                req.session.user = user;
-                res.redirect('/');
-            } else {
-                res.redirect('/login?error=Usuario o contraseña incorrectos');
-            }
         }
     });
 });
