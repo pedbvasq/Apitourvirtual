@@ -32,9 +32,6 @@ li {
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 button {
@@ -57,4 +54,25 @@ input[type="file"] {
 input[type="text"] {
     width: calc(100% - 110px);
     margin-right: 10px;
+}
+
+/* Añade este bloque CSS para el nombre de los medios */
+.media-item-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px; /* Espacio entre los elementos */
+}
+
+.media-item-container img, 
+.media-item-container video {
+    max-width: 100%; /* Ajusta al contenedor */
+    height: auto; /* Mantén la proporción */
+}
+
+.media-item-name {
+    margin-top: 10px; /* Espacio entre el medio y el nombre */
+    font-size: 16px; /* Tamaño del texto */
+    color: #333;
+    text-align: center; /* Alinear el texto al centro */
 }

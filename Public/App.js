@@ -52,25 +52,7 @@ function deleteTitle(id) {
         });
 }
 
-function loadVideos() {
-    fetch('/api/videos')
-        .then(response => response.json())
-        .then(data => {
-            const videoList = document.getElementById('video-list');
-            videoList.innerHTML = '';
-            data.forEach(filename => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <video width="320" height="240" controls>
-                        <source src="/videos/${filename}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <button onclick="deleteVideo('${filename}')">Eliminar</button>
-                `;
-                videoList.appendChild(li);
-            });
-        });
-}
+
 
 function addVideo() {
     const newVideoInput = document.getElementById('new-video');
@@ -99,6 +81,35 @@ function deleteVideo(filename) {
         });
 }
 
+function loadVideos() {
+    fetch('/api/videos')
+        .then(response => response.json())
+        .then(data => {
+            const videoList = document.getElementById('video-list');
+            videoList.innerHTML = '';
+            data.forEach(filename => {
+                const li = document.createElement('li');
+                li.classList.add('media-item-container'); // Añade la clase para aplicar estilos
+
+                const videoElement = `
+                    <video width="320" height="240" controls>
+                        <source src="/videos/${filename}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+
+                const nameElement = `
+                    <div class="media-item-name">${filename}</div>
+                `;
+
+                li.innerHTML = `${videoElement}${nameElement}
+                    <button onclick="deleteVideo('${filename}')">Eliminar</button>
+                `;
+                videoList.appendChild(li);
+            });
+        });
+}
+
 function loadImages() {
     fetch('/api/images')
         .then(response => response.json())
@@ -107,14 +118,24 @@ function loadImages() {
             imageList.innerHTML = '';
             data.forEach(filename => {
                 const li = document.createElement('li');
-                li.innerHTML = `
+                li.classList.add('media-item-container'); // Añade la clase para aplicar estilos
+
+                const imageElement = `
                     <img src="/images/${filename}" width="320" height="240">
+                `;
+
+                const nameElement = `
+                    <div class="media-item-name">${filename}</div>
+                `;
+
+                li.innerHTML = `${imageElement}${nameElement}
                     <button onclick="deleteImage('${filename}')">Eliminar</button>
                 `;
                 imageList.appendChild(li);
             });
         });
 }
+
 
 function addImage() {
     const newImageInput = document.getElementById('new-image');
