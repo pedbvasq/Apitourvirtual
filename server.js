@@ -9,26 +9,10 @@ const port = 3000;
 app.get('/', (req, res) => {
     res.redirect('/login');
 });
-
-// Configuración del almacenamiento de archivos
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        if (file.mimetype.startsWith('video/')) {
-            cb(null, 'videos/');
-        } else if (file.mimetype.startsWith('image/')) {
-            cb(null, 'images/');
-        }
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({ storage: storage });
-
 // Middleware para parsear JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Middleware para sesiones
 app.use(session({
@@ -38,19 +22,12 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// Middleware para verificar autenticación
-function checkAuth(req, res, next) {
-    if (req.session && req.session.user) {
-        return next();
-    } else {
-        res.redirect('/login');
-    }
-}
-
 // Configuración para servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/videos', express.static(path.join(__dirname, 'videos')));
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use(express.static(path.join(__dirname, 'src', 'public')));
+app.use('/videos', express.static(path.join(__dirname, 'src', 'videos')));
+app.use('/images', express.static(path.join(__dirname, 'src', 'images')));
+
+
 
 // Ruta para login
 app.get('/login', (req, res) => {
@@ -58,14 +35,14 @@ app.get('/login', (req, res) => {
         res.redirect('/administrador');
     } else {
         const error = req.query.error ? req.query.error : '';
-        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+        res.sendFile(path.join(__dirname, 'src', 'public', 'login.html'));
     }
 });
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     // Validar usuario
-    fs.readFile('users.json', 'utf8', (err, data) => {
+    fs.readFile(path.join(__dirname, 'src', 'users.json'), 'utf8', (err, data) => {
         if (err) {
             res.status(500).json({ error: 'Error al leer los datos de usuario' });
         } else {
@@ -98,19 +75,42 @@ app.get('/logout', (req, res) => {
     });
 });
 
-
 // Ruta para administrador
 app.get('/administrador', checkAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'src', 'public', 'index.html'));
 });
 
-// Datos de ejemplo para títulos
+// Middleware para verificar autenticación
+function checkAuth(req, res, next) {
+    if (req.session && req.session.user) {
+        return next();
+    } else {
+        res.redirect('/login');
+    }
+}
+
+// Configuración del almacenamiento de archivos
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        if (file.mimetype.startsWith('video/')) {
+            cb(null, path.join(__dirname, 'src', 'videos'));
+        } else if (file.mimetype.startsWith('image/')) {
+            cb(null, path.join(__dirname, 'src', 'images'));
+        }
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Rutas CRUD para títulos
 let titles = {
     1: "Título del Video 1",
     2: "Título del Video 2",
 };
 
-// Rutas CRUD para títulos
 app.get('/api/titles', checkAuth, (req, res) => {
     res.json(titles);
 });
@@ -155,7 +155,7 @@ app.delete('/api/titles/:id', checkAuth, (req, res) => {
 
 // Rutas CRUD para videos
 app.get('/api/videos', checkAuth, (req, res) => {
-    fs.readdir('videos', (err, files) => {
+    fs.readdir(path.join(__dirname, 'src', 'videos'), (err, files) => {
         if (err) {
             res.status(500).json({ error: 'Error al leer el directorio de videos' });
         } else {
@@ -170,7 +170,7 @@ app.post('/api/videos', checkAuth, upload.single('video'), (req, res) => {
 
 app.delete('/api/videos/:filename', checkAuth, (req, res) => {
     const filename = req.params.filename;
-    fs.unlink(path.join(__dirname, 'videos', filename), (err) => {
+    fs.unlink(path.join(__dirname, 'src', 'videos', filename), (err) => {
         if (err) {
             res.status(500).json({ error: 'Error al eliminar el video' });
         } else {
@@ -181,7 +181,7 @@ app.delete('/api/videos/:filename', checkAuth, (req, res) => {
 
 // Rutas CRUD para imágenes
 app.get('/api/images', checkAuth, (req, res) => {
-    fs.readdir('images', (err, files) => {
+    fs.readdir(path.join(__dirname, 'src', 'images'), (err, files) => {
         if (err) {
             res.status(500).json({ error: 'Error al leer el directorio de imágenes' });
         } else {
@@ -196,7 +196,7 @@ app.post('/api/images', checkAuth, upload.single('image'), (req, res) => {
 
 app.delete('/api/images/:filename', checkAuth, (req, res) => {
     const filename = req.params.filename;
-    fs.unlink(path.join(__dirname, 'images', filename), (err) => {
+    fs.unlink(path.join(__dirname, 'src', 'images', filename), (err) => {
         if (err) {
             res.status(500).json({ error: 'Error al eliminar la imagen' });
         } else {
