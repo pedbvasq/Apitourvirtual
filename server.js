@@ -4,7 +4,8 @@ const fs = require('fs');
 const multer = require('multer');
 const session = require('express-session');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
 // Ruta para la raíz
 app.get('/', (req, res) => {
     res.redirect('/login');
