@@ -5,6 +5,10 @@ const multer = require('multer');
 const session = require('express-session');
 const app = express();
 const port = process.env.PORT || 3000;
+// Ruta para la raíz
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -23,10 +27,6 @@ app.use(express.static(path.join(__dirname, 'src', 'public')));
 app.use('/videos', express.static(path.join(__dirname, 'src', 'videos')));
 app.use('/images', express.static(path.join(__dirname, 'src', 'images')));
 
-// Ruta para la raíz
-app.get('/', (req, res) => {
-    res.redirect('/login');
-});
 
 // Ruta para login
 app.get('/login', (req, res) => {
